@@ -70,8 +70,8 @@ resumed from this file and the files on disk.
 
 | # | Increment | Acceptance tests proven |
 |---|---|---|
-| **M0** | Package skeleton, Typer CLI, `project.json` state, hashing, `create` / `status` / `list` / `approve` primitives | AT6 (resume), approval hash-binding |
-| M1 | Pydantic schemas for brief/script/storyboard; stub director (Markdown → scenes, offline); `plan`; `build` blocked without valid creative approval | AT1, AT2 |
+| **M0** ✅ | Package skeleton, Typer CLI, `project.json` state, hashing, `create` / `status` / `list` / `approve` primitives | AT6 (resume), approval hash-binding |
+| **M1** ✅ | Pydantic schemas for brief/script/storyboard; stub director (Markdown → scenes, offline); `plan` / `validate` / `schema`; external-director brief for Claude Code; `build` blocked without valid creative approval | AT1, AT2 |
 | M2 | Remotion project: `title`, `text-reveal`, `architecture-diagram` templates; silent single-scene render from props; ffprobe validator | First MP4 |
 | M3 | `VoiceProvider` interface: `fixture` (supplied WAVs) + `kokoro`; scene durations from audio; captions (SRT + burned-in via Remotion); mux | AT3 |
 | M4 | Segment cache + concat; `revise --scene <id> --file <patch.json>` (offline) and `--instruction` (director) | AT5 |
@@ -81,6 +81,12 @@ resumed from this file and the files on disk.
 
 **M2 is the riskiest step** (Remotion props, fonts, Windows paths). Get a
 three-scene silent render working before touching audio.
+
+### Decisions made in M1
+- Narration lives only in `script.md`; the storyboard is visuals only, joined by scene id.
+- `approve --stage creative` re-validates first and refuses leftover `TODO` text.
+- `plan` refuses to overwrite without `--force`, and backs up to `history/` when forced.
+- The demo source is `examples/llm-api-explainer.md` (6 scenes, ≈61 s at 150 wpm).
 
 ### Demo storyboard sketch (M7)
 1. Hook: "What actually happens when your app calls an LLM?"

@@ -6,6 +6,34 @@ import pytest
 from frameforge.state import Workspace
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+EXAMPLES = REPO_ROOT / "examples"
+
+VALID_BRIEF = """---
+title: Hello
+audience: developers
+objective: say hello
+key_message: hello works
+duration_s: 60
+---
+"""
+
+VALID_SCRIPT = """# Hello
+
+## s01 — Hook
+Hello there. This is a short narrated scene.
+
+## s02 — Point
+Here is the point we want to make.
+"""
+
+VALID_STORYBOARD = """{
+  "title": "Hello",
+  "scenes": [
+    {"id": "s01", "template": "title", "props": {"heading": "Hello"}},
+    {"id": "s02", "template": "text-reveal", "props": {"heading": "Point", "bullets": ["one"]}}
+  ]
+}
+"""
 
 
 @pytest.fixture
@@ -18,6 +46,6 @@ def workspace(tmp_path, monkeypatch) -> Workspace:
 
 def write_creative(ws: Workspace, pid: str) -> None:
     d = ws.dir(pid)
-    (d / "brief.md").write_text("# Brief\nAudience: developers\n", encoding="utf-8")
-    (d / "script.md").write_text("# Script\nScene 1: hello\n", encoding="utf-8")
-    (d / "storyboard.json").write_text('{"scenes": [{"id": "s01"}]}', encoding="utf-8")
+    (d / "brief.md").write_text(VALID_BRIEF, encoding="utf-8")
+    (d / "script.md").write_text(VALID_SCRIPT, encoding="utf-8")
+    (d / "storyboard.json").write_text(VALID_STORYBOARD, encoding="utf-8")
