@@ -1,0 +1,30 @@
+name: technical-dark
+version: 1
+palette:
+  background: "#0E1116"
+  surface: "#161B22"
+  text: "#E6EDF3"
+  muted: "#8B949E"
+  accent: "#58A6FF"
+  zone_internal: "#2EA043"   # your app / backend
+  zone_external: "#D29922"   # third-party APIs
+typography:
+  heading: { family: "Inter", weight: 700, size_px: 72 }
+  body: { family: "Inter", weight: 400, size_px: 40 }
+  mono: { family: "JetBrains Mono", weight: 500, size_px: 32 }
+layout:
+  safe_margin_px: 96
+  grid_columns: 12
+motion:
+  scene_in: { type: fade, frames: 12 }
+  scene_out: { type: fade, frames: 12 }
+  element_stagger_frames: 6
+  easing: easeOutCubic
+captions:
+  enabled: true
+  position: bottom
+  max_chars_per_line: 42
+  background: "rgba(0,0,0,0.6)"
+logo:
+  path: null
+  position: top-right
