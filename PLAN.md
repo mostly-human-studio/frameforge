@@ -70,9 +70,9 @@ resumed from this file and the files on disk.
 
 | # | Increment | Acceptance tests proven |
 |---|---|---|
-| **M0** | Package skeleton, Typer CLI, `project.json` state, hashing, `create` / `status` / `list` / `approve` primitives | AT6 (resume), approval hash-binding |
-| M1 | Pydantic schemas for brief/script/storyboard; stub director (Markdown → scenes, offline); `plan`; `build` blocked without valid creative approval | AT1, AT2 |
-| M2 | Remotion project: `title`, `text-reveal`, `architecture-diagram` templates; silent single-scene render from props; ffprobe validator | First MP4 |
+| **M0** ✅ | Package skeleton, Typer CLI, `project.json` state, hashing, `create` / `status` / `list` / `approve` primitives | AT6 (resume), approval hash-binding |
+| **M1** ✅ | Pydantic schemas for brief/script/storyboard; stub director (Markdown → scenes, offline); `plan` / `validate` / `schema`; external-director brief for Claude Code; `build` blocked without valid creative approval | AT1, AT2 |
+| **M2** ✅ | Remotion project: `title`, `text-reveal`, `architecture-diagram`, `image` templates; batch scene renderer with bundle cache; segment cache + concat; ffprobe validator; placeholder renderer for tests | First MP4; determinism |
 | M3 | `VoiceProvider` interface: `fixture` (supplied WAVs) + `kokoro`; scene durations from audio; captions (SRT + burned-in via Remotion); mux | AT3 |
 | M4 | Segment cache + concat; `revise --scene <id> --file <patch.json>` (offline) and `--instruction` (director) | AT5 |
 | M5 | `review`: validation report (streams, codecs, dimensions, duration, missing assets) + static HTML page with video and per-scene thumbnails; final gate | AT4 |
@@ -81,6 +81,26 @@ resumed from this file and the files on disk.
 
 **M2 is the riskiest step** (Remotion props, fonts, Windows paths). Get a
 three-scene silent render working before touching audio.
+
+### Decisions made in M1
+- Narration lives only in `script.md`; the storyboard is visuals only, joined by scene id.
+- `approve --stage creative` re-validates first and refuses leftover `TODO` text.
+- `plan` refuses to overwrite without `--force`, and backs up to `history/` when forced.
+- The demo source is `examples/llm-api-explainer.md` (6 scenes, ≈61 s at 150 wpm).
+
+### Decisions made in M2
+- Segments are rendered **silent**. M3 builds one narration track (per-scene
+  audio plus padding) and muxes it onto the concatenated video, so scene
+  segments never need re-encoding for audio.
+- The segment cache landed in M2, not M4: it was the natural shape for
+  `build`. M4 is now `revise` plus invalidation tests through that command.
+- Any renderer code change re-renders every scene. That's coarse but safe;
+  per-template fingerprints can come later if render time hurts.
+- Remotion `licenseKey` is never passed (see README, Costs/telemetry), and a test guards it.
+- Fonts come from `@fontsource` (npm), so there are no network font fetches. The first frame waits for fonts to load (determinism).
+- Determinism verified: a forced re-render of a scene produces frame-identical
+  output (`tests/test_render_remotion.py`).
+- Measured: the 60.8 s demo renders at 960x540 in about 1m50s on 2 vCPU.
 
 ### Demo storyboard sketch (M7)
 1. Hook: "What actually happens when your app calls an LLM?"

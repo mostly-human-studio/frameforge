@@ -203,6 +203,7 @@ class Workspace:
         outputs: list[str] | None = None,
         input_hash: str | None = None,
         error: str | None = None,
+        save: bool = True,
     ) -> None:
         if stage not in STAGES:
             raise FrameForgeError(f"Unknown stage '{stage}'.", hint=f"Stages: {', '.join(STAGES)}.")
@@ -214,7 +215,8 @@ class Workspace:
             updated_at=_now(),
             error=error,
         )
-        self.save(project)
+        if save:
+            self.save(project)
 
     # ---------- approvals ----------
     def approve(self, project: Project, gate: ApprovalGate, note: str | None = None) -> Approval:

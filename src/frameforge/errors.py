@@ -24,3 +24,7 @@ class MissingArtifact(FrameForgeError):
 
 class CorruptState(FrameForgeError):
     exit_code = 5
+
+
+class InvalidArtifact(FrameForgeError):
+    exit_code = 6
