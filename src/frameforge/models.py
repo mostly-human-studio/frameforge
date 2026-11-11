@@ -35,6 +35,59 @@ class Brief(_Strict):
     notes: str = ""
 
 
+# ---------------------------------------------------------------- design system
+# Only what the renderer needs is required; extra keys (captions, logo…) pass through.
+
+class _Open(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+
+class FontSpec(_Open):
+    family: str
+    weight: int
+    size_px: float
+
+
+class Palette(_Open):
+    background: str
+    surface: str
+    text: str
+    muted: str
+    accent: str
+    zone_internal: str
+    zone_external: str
+
+
+class Typography(_Open):
+    heading: FontSpec
+    body: FontSpec
+    mono: FontSpec
+
+
+class LayoutSpec(_Open):
+    safe_margin_px: float
+
+
+class Transition(_Open):
+    type: Literal["fade", "none"] = "fade"
+    frames: int = Field(ge=0, le=120)
+
+
+class Motion(_Open):
+    scene_in: Transition
+    scene_out: Transition
+    element_stagger_frames: int = Field(ge=0, le=60)
+
+
+class DesignSystem(_Open):
+    name: str
+    version: int | str
+    palette: Palette
+    typography: Typography
+    layout: LayoutSpec
+    motion: Motion
+
+
 # ---------------------------------------------------------------- script
 
 class ScriptScene(_Strict):

@@ -11,9 +11,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
+from pydantic import ValidationError
 
-from ..formats import ArtifactError, parse_brief, parse_script, parse_storyboard
-from ..models import Brief, Script, Storyboard
+from ..formats import ArtifactError, format_validation_error, parse_brief, parse_script, parse_storyboard
+from ..models import Brief, DesignSystem, Script, Storyboard
 from ..settings import WorkspaceSettings
 from ..state import Project, StageStatus, Workspace
 
@@ -61,12 +62,15 @@ def validate_creative(ws: Workspace, project: Project, settings: WorkspaceSettin
     design_ok = True
     design = pdir / "design-system.yaml"
     try:
-        yaml.safe_load(design.read_text(encoding="utf-8"))
+        DesignSystem.model_validate(yaml.safe_load(design.read_text(encoding="utf-8")) or {})
     except FileNotFoundError:
         r.errors.append("design-system.yaml: missing")
         design_ok = False
     except yaml.YAMLError as exc:
         r.errors.append(f"design-system.yaml: invalid YAML: {exc}")
+        design_ok = False
+    except ValidationError as exc:
+        r.errors += [f"design-system.yaml: {p}" for p in format_validation_error(exc)]
         design_ok = False
 
     for name in ("brief.md", "script.md", "storyboard.json"):

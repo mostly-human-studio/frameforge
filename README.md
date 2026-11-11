@@ -3,8 +3,9 @@
 Local-first pipeline that turns a concept into a narrated MP4, with human
 approval gates. A Mostly Human Studio tool. See `PLAN.md` for the roadmap.
 
-**Status: M1.** Projects, approval gates and creative planning (brief, script,
-storyboard) work offline. Rendering arrives in M2, narration in M3.
+**Status: M2.** Projects, approval gates, creative planning and rendering
+work: `build` produces a validated, **silent** MP4. Narration and captions
+arrive in M3.
 
 ## Setup (Windows PowerShell)
 
@@ -17,6 +18,23 @@ pytest
 
 macOS/Linux: same steps, using `python3 -m venv .venv && source .venv/bin/activate`.
 
+### Renderer (needed for `build`)
+
+```powershell
+winget install OpenJS.NodeJS.LTS      # Node 18+
+winget install Gyan.FFmpeg            # ffmpeg + ffprobe on PATH
+cd renderer; npm ci; cd ..
+```
+
+On the first render, Remotion downloads its own headless Chrome. To use an
+existing Chrome instead, set `FRAMEFORGE_BROWSER` to its path and
+`chrome_mode: chrome-for-testing` in `config/settings.yaml`.
+
+Preview templates interactively: `cd renderer; npm run studio`.
+
+Real-render tests are opt-in (slow):
+`$env:FRAMEFORGE_TEST_REMOTION=1; pytest -m remotion`.
+
 ## Commands
 
 ```bash
@@ -26,7 +44,7 @@ frameforge plan <id>                                          # concept only →
 frameforge plan <id> --director external                      # Claude Code writes the files
 frameforge validate <id>
 frameforge approve <id> --stage creative|final [--note "..."]
-frameforge build <id>        # enforces the creative gate; renderer lands in M2
+frameforge build <id> [--scale 0.5] [--scene s03] [--force]
 frameforge status <id> [--json]
 frameforge list
 frameforge schema brief|storyboard
@@ -54,6 +72,24 @@ Validation blocks approval for: missing or invalid files, scene ids that don't
 match, diagram references that don't resolve, asset paths outside `assets/`,
 and any leftover `TODO` text. Missing assets and a length more than ±10% off
 target are warnings at plan time; missing assets become errors at build.
+
+## Building
+
+`build` renders each scene to its own segment in `scenes/`, then joins them
+losslessly into `output/final.mp4`. Every file is checked with ffprobe
+(codec, size, fps, frame count, duration).
+
+- **Caching:** each segment is keyed by its scene JSON, the design system,
+  timing, size and the renderer code. Rebuilding re-renders only scenes whose
+  key changed: edit one scene and one scene renders. Changing the design or
+  the renderer code re-renders everything.
+- `--scene s03` renders one scene for preview and skips the final video.
+- `--scale 0.5` makes quick 960x540 drafts. Draft segments are cached
+  separately from full-size ones.
+- Until M3, each scene's length is estimated from its narration word count
+  (`narration_wpm`, minimum `min_scene_s`).
+- `renderer: placeholder` in settings renders colour cards through FFmpeg, with
+  no Node or browser. Good for checking timing. The test suite uses it.
 
 ## Source documents (offline director)
 
@@ -103,8 +139,16 @@ in use, so later edits to the shared profile don't change existing projects.
 
 ## Costs, secrets, telemetry
 
-M0 makes no network calls. Provider keys (from M6) come only from environment
-variables. Telemetry is off and there is nothing to send.
+FrameForge makes no network calls of its own. Provider keys (from M6) come only
+from environment variables.
+
+**Remotion usage events:** Remotion's renderer posts a usage event to
+remotion.pro whenever a `licenseKey` is passed, including `"free-license"`.
+FrameForge never passes one, so renders send nothing. That also triggers a
+"pass licenseKey" warning, which is hidden by `logLevel: "error"`.
+`tests/test_renderer_contract.py` fails if a key is ever added. The only
+network access is Remotion's one-time Chrome download, when no
+`FRAMEFORGE_BROWSER` is set.
 
 ## Licensing note
 

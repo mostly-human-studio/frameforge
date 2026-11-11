@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+import yaml
 
 from frameforge.state import Workspace
 
@@ -36,10 +37,22 @@ VALID_STORYBOARD = """{
 """
 
 
+def set_settings(root: Path, **overrides) -> None:
+    path = root / "config" / "settings.yaml"
+    data = yaml.safe_load(path.read_text()) or {}
+    data.update(overrides)
+    path.write_text(yaml.safe_dump(data))
+
+
 @pytest.fixture
 def workspace(tmp_path, monkeypatch) -> Workspace:
-    """An isolated workspace with the repo's config copied in."""
+    """An isolated workspace with the repo's config copied in.
+
+    Uses the placeholder renderer (FFmpeg colour cards) at 1/8 scale, so
+    pipeline tests run offline without Node or a browser.
+    """
     shutil.copytree(REPO_ROOT / "config", tmp_path / "config")
+    set_settings(tmp_path, renderer="placeholder", render_scale=0.125)
     monkeypatch.setenv("FRAMEFORGE_HOME", str(tmp_path))
     return Workspace(tmp_path)
 

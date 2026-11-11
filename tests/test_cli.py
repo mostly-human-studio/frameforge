@@ -36,7 +36,8 @@ def test_build_blocked_until_creative_approval(workspace):
 
     assert run("approve", "gate", "--stage", "creative").exit_code == 0
     r = run("build", "gate")
-    assert r.exit_code == 1 and "M2" in r.stderr  # gate passes; renderer not built yet
+    assert r.exit_code == 0, r.output
+    assert (workspace.dir("gate") / "output" / "final.mp4").is_file()
 
 
 def test_errors_are_clean_with_hints(workspace):

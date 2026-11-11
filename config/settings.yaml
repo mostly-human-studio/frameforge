@@ -8,3 +8,12 @@ duration_tolerance: 0.10
 narration_wpm: 150      # used to estimate duration before audio exists
 director: stub          # stub (offline) | external (Claude Code writes the files)
 telemetry: false
+min_scene_s: 3.0
+
+# Rendering
+renderer: remotion          # remotion | placeholder (colour cards via FFmpeg; no browser needed)
+render_scale: 1.0           # 0.5 = quick 960x540 drafts
+render_concurrency: null    # null = Remotion picks
+crf: 18
+browser_executable: null    # or set env FRAMEFORGE_BROWSER; null lets Remotion download its own Chrome
+chrome_mode: headless-shell # use chrome-for-testing when pointing at a regular Chrome install
