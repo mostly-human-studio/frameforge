@@ -1,5 +1,5 @@
 name: technical-dark
-version: 1
+version: 2
 palette:
   background: "#0E1116"
   surface: "#161B22"
@@ -28,3 +28,7 @@ captions:
 logo:
   path: null
   position: top-right
+background:
+  style: grid-glow   # plain | grid-glow
+  grid_px: 48
+  glow: true

@@ -10,7 +10,8 @@ export type TemplateProps =
   | {template: 'title'; props: {heading: string; subheading?: string}}
   | {template: 'text-reveal'; props: {heading: string; bullets: string[]}}
   | {template: 'architecture-diagram'; props: {heading?: string; zones: Zone[]; nodes: DiagramNode[]; edges: Edge[]}}
-  | {template: 'image'; props: {asset: string; caption?: string; fit?: 'contain' | 'cover'}};
+  | {template: 'image'; props: {asset: string; caption?: string; fit?: 'contain' | 'cover'}}
+  | {template: 'morph'; props: {from: string; to: string; kicker?: string; tagline?: string}};
 
 export type SceneSpec = {id: string; title?: string} & TemplateProps;
 
@@ -35,6 +36,7 @@ export type Design = {
     scene_out: {type: 'fade' | 'none'; frames: number};
     element_stagger_frames: number;
   };
+  background?: {style?: 'plain' | 'grid-glow'; grid_px?: number; glow?: boolean};
 };
 
 export type SceneProps = {

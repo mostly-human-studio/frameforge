@@ -102,6 +102,14 @@ three-scene silent render working before touching audio.
   output (`tests/test_render_remotion.py`).
 - Measured: the 60.8 s demo renders at 960x540 in about 1m50s on 2 vCPU.
 
+### Brand graphics (between M2 and M3)
+- `morph` template: gooey text morph (cross-blur + alpha threshold), linear
+  timing so the melt is visible; ~2 s.
+- `background.style: grid-glow` in profiles (technical-dark → v2). Static, so
+  cuts are seamless and caching is unaffected.
+- ```` ```scene ```` blocks in source docs set any template exactly.
+- Open: real Mostly Human logo asset (currently a typographic wordmark).
+
 ### Demo storyboard sketch (M7)
 1. Hook: "What actually happens when your app calls an LLM?"
 2. The boundary: your app + backend (one color zone) vs. the external model API (another)
