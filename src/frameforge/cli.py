@@ -15,7 +15,9 @@ from .errors import FrameForgeError, InvalidArtifact
 from .models import Brief, Storyboard
 from .paths import workspace_root
 from .pipeline.creative import CreativeReport, validate_creative
+from .pipeline.build import run_build
 from .pipeline.plan import run_plan
+from .render import get_renderer
 from .settings import load_settings
 from .state import STAGES, ApprovalGate, Workspace
 
@@ -207,19 +209,37 @@ def approve(
 
 @app.command()
 @handle_errors
-def build(project_id: str) -> None:
-    """Render the video. Blocked until creative approval is valid."""
+def build(
+    project_id: str,
+    scene: str | None = typer.Option(None, "--scene", help="Render only this scene (preview); skips the final video."),
+    force: bool = typer.Option(False, "--force", help="Re-render even when a cached segment matches."),
+    scale: float | None = typer.Option(None, "--scale", min=0.1, max=1.0, help="Override render_scale, e.g. 0.5 for quick drafts."),
+) -> None:
+    """Render scenes and assemble output/final.mp4. Blocked until creative approval is valid."""
     ws = _ws()
+    settings = load_settings(ws.root)
+    if scale is not None:
+        settings = settings.model_copy(update={"render_scale": scale})
     project = ws.load(project_id)
-    ws.require_approval(project, ApprovalGate.creative)
-    report = validate_creative(ws, project, load_settings(ws.root))
-    missing_assets = [w for w in report.warnings if "required before build" in w]
-    report.errors += missing_assets
-    _require_valid(report, project.id, "build")
-    raise FrameForgeError(
-        "Rendering is not implemented yet (milestone M2).",
-        hint="Creative approval is valid; the gate is working. See PLAN.md §3.",
-    )
+    renderer = get_renderer(settings)
+
+    def on_event(e: dict) -> None:
+        kind = e.get("event")
+        if kind == "bundling":
+            typer.echo("  bundling renderer (first run per renderer version)…", err=True)
+        elif kind == "scene-done":
+            typer.echo(f"  ✓ rendered {e['id']} ({e.get('frames')} frames)", err=True)
+
+    result = run_build(ws, project, settings, renderer, only_scene=scene, force=force, on_event=on_event)
+    if result.reused:
+        typer.echo(f"  ↺ reused cached: {', '.join(result.reused)}", err=True)
+    if result.final:
+        w, h = result.size
+        typer.echo(str(result.final.relative_to(ws.root)))
+        typer.echo(f"Built {result.duration_s:.1f}s at {w}x{h} (silent until narration lands in M3).", err=True)
+    else:
+        seg = project.scenes.get(scene, {}).get("segment")
+        typer.echo(f"projects/{project.id}/{seg}" if seg else "")
 
 
 if __name__ == "__main__":

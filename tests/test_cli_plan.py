@@ -42,7 +42,7 @@ def test_at2_build_blocked_until_approved_then_after_edit(workspace):
 
     assert run("approve", "gate", "--stage", "creative").exit_code == 0
     r = run("build", "gate")
-    assert r.exit_code == 1 and "M2" in r.stderr  # gate passes; renderer not built yet
+    assert r.exit_code == 0, r.output
 
     script = workspace.dir("gate") / "script.md"
     script.write_text(script.read_text() + "\nOne more line.\n")

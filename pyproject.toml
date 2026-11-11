@@ -24,3 +24,4 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["remotion: real Remotion renders (slow; set FRAMEFORGE_TEST_REMOTION=1)"]

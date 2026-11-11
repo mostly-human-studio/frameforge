@@ -23,6 +23,14 @@ class WorkspaceSettings(BaseModel):
     narration_wpm: int = 150
     director: str = "stub"
     telemetry: bool = False
+    min_scene_s: float = 3.0
+    # Rendering
+    renderer: str = "remotion"            # remotion | placeholder (colour cards via FFmpeg, no browser)
+    render_scale: float = 1.0             # 0.5 renders 960x540 drafts from a 1920x1080 project
+    render_concurrency: int | None = None
+    crf: int = 18
+    browser_executable: str | None = None  # env FRAMEFORGE_BROWSER overrides; None lets Remotion manage Chrome
+    chrome_mode: str = "headless-shell"   # use "chrome-for-testing" with a regular Chrome install
 
 
 def load_settings(root: Path | None = None) -> WorkspaceSettings:
