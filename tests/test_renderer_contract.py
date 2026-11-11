@@ -24,6 +24,11 @@ def test_never_passes_a_remotion_license_key():
     assert "apiKey" not in code_without_comments
 
 
+def test_renders_to_partial_then_renames():
+    code = (RENDERER / "scripts" / "render-scenes.mjs").read_text()
+    assert ".partial.mp4" in code and "outputLocation: partial" in code and "renameSync(partial, scene.output)" in code
+
+
 def test_every_template_is_handled_by_the_renderer():
     scene_tsx = (RENDERER / "src" / "Scene.tsx").read_text()
     handled = set(re.findall(r"case '([a-z-]+)':", scene_tsx))

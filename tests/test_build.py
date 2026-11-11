@@ -130,6 +130,21 @@ def test_renderer_failure_marks_stage_failed(demo):
     assert st.status is StageStatus.failed and st.error == "boom"
 
 
+def test_interrupted_render_is_not_cached(demo):
+    """A stopped render leaves only a .partial file; the next build must re-render, not reuse it."""
+    class Interrupted(PlaceholderRenderer):
+        def render(self, request, on_event=None):
+            job = request.jobs[0]
+            job.output.with_name(job.output.stem + ".partial.mp4").write_bytes(b"truncated")
+            raise FrameForgeError("killed", hint="test")
+
+    with pytest.raises(FrameForgeError, match="killed"):
+        run_build(demo, demo.load("demo"), load_settings(demo.root), Interrupted())
+    r = build(demo)
+    assert len(r.rendered) == 6
+    assert not list((demo.dir("demo") / "scenes").glob("*.partial.mp4"))  # pruned
+
+
 def test_bad_render_output_is_caught(demo):
     class WrongSize(PlaceholderRenderer):
         def render(self, request, on_event=None):

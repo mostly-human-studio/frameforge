@@ -47,7 +47,8 @@ export const ArchitectureDiagram: React.FC<{heading?: string; zones: Zone[]; nod
     const members = nodes.filter((n) => n.zone === zr.zone.id);
     const slot = zr.w / Math.max(1, members.length);
     members.forEach((n, j) => {
-      boxes.push({node: n, zone: zr.zone, cx: zr.x + slot * (j + 0.5), cy, w: Math.min(340 * u, slot - 48 * u), h: 150 * u, order: 0});
+      // Boxes take at most ~68% of their slot so busy diagrams keep readable gaps for edge labels.
+      boxes.push({node: n, zone: zr.zone, cx: zr.x + slot * (j + 0.5), cy, w: Math.min(340 * u, slot * 0.68), h: 150 * u, order: 0});
     });
   });
   boxes.sort((a, b) => a.cx - b.cx).forEach((b, i) => (b.order = i));

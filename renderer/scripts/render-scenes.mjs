@@ -45,6 +45,9 @@ const main = async () => {
       chromeMode: job.chromeMode ?? 'headless-shell',
       logLevel: 'error',
     });
+    // Render to a temporary name and rename only on success: an interrupted
+    // render must never leave a short-but-playable file at the cached path.
+    const partial = scene.output.replace(/\.mp4$/, '.partial.mp4');
     await renderMedia({
       serveUrl,
       composition,
@@ -54,7 +57,7 @@ const main = async () => {
       x264Preset: job.x264Preset ?? 'veryfast',
       pixelFormat: 'yuv420p',
       muted: true,
-      outputLocation: scene.output,
+      outputLocation: partial,
       overwrite: true,
       concurrency: job.concurrency ?? null,
       scale: job.scale ?? 1,
@@ -65,6 +68,7 @@ const main = async () => {
         if (Math.round(progress * 100) % 25 === 0) emit({event: 'progress', id: scene.id, progress});
       },
     });
+    renameSync(partial, scene.output);
     emit({event: 'scene-done', id: scene.id, output: scene.output, frames: composition.durationInFrames});
   }
   emit({event: 'done'});
