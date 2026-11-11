@@ -129,3 +129,49 @@ def test_duration_mismatch_warns(workspace):
     w = _validate(workspace, "dur").warnings
     assert any("vs target 300s" in x for x in w)
     assert any("brief says 60s" in x for x in w)
+
+
+# ---------------------------------------------------------------- scene blocks + morph
+
+def test_scene_block_sets_template_exactly():
+    src = ("# T\n\nIntro.\n\n## Outro\nBye now.\n\n"
+           "```scene\ntemplate: morph\nprops:\n  from: FrameForge\n  to: Mostly Human Studio\n  tagline: Makers of FrameForge\n```\n")
+    d = StubDirector().draft(DraftRequest("x", 60, src))
+    s = d.storyboard.scenes[1]
+    assert s.template == "morph" and s.props.from_ == "FrameForge" and s.props.to == "Mostly Human Studio"
+    assert d.script.scenes[1].narration == "Bye now."
+
+
+def test_scene_block_errors_name_the_section():
+    import pytest
+    from frameforge.errors import FrameForgeError
+    src = "# T\n\nIntro.\n\n## Broken\nText.\n\n```scene\ntemplate: morph\nprops:\n  from: A\n```\n"
+    with pytest.raises(FrameForgeError) as exc:
+        StubDirector().draft(DraftRequest("x", 60, src))
+    assert exc.value.message == "Scene block under '## Broken' is invalid: morph.props.to: Field required"
+
+
+def test_morph_roundtrips_with_from_alias():
+    from frameforge.formats import parse_storyboard, render_storyboard
+    d = StubDirector().draft(DraftRequest("x", 60, (EXAMPLES / "frameforge-promo.md").read_text()))
+    out = render_storyboard(d.storyboard)
+    assert '"from": "FrameForge"' in out and "from_" not in out
+    assert parse_storyboard(out) == d.storyboard
+    assert [s.template for s in d.storyboard.scenes][-2:] == ["title", "morph"]
+
+
+def test_promo_source_plans_clean(workspace):
+    from frameforge.pipeline.plan import run_plan
+    p = workspace.create("promo", project_id="promo", duration_s=56)
+    res = run_plan(workspace, p, load_settings(workspace.root), director="stub", source=EXAMPLES / "frameforge-promo.md")
+    assert res.report.ok, res.report.errors
+    assert res.report.warnings == []
+
+
+def test_design_background_defaults_to_plain():
+    from frameforge.models import DesignSystem
+    import yaml
+    data = yaml.safe_load((EXAMPLES.parent / "config" / "profiles" / "technical-dark.yaml").read_text())
+    assert DesignSystem.model_validate(data).background.style == "grid-glow"
+    data.pop("background")
+    assert DesignSystem.model_validate(data).background.style == "plain"

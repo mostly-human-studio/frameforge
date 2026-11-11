@@ -3,7 +3,7 @@ subtitle: Write it down. Get a video. Stay in charge.
 audience: Developers, educators and small studios who explain technical ideas on video
 objective: Show what FrameForge does and why its approval-first, local-first design matters
 key_message: FrameForge turns a Markdown doc into a finished video, and nothing renders until you approve it.
-duration_s: 50
+duration_s: 56
 tone: confident, dry, a little playful
 ---
 
@@ -69,7 +69,23 @@ It runs on your machine and sends nothing home. Claude Code can direct the creat
 
 ## This video was a Markdown file
 
-That's the pitch. FrameForge, from Mostly Human Studio.
+That's the pitch. This entire video started life as a Markdown file.
 
-- Made with FrameForge
-- Mostly Human Studio
+```scene
+template: title
+props:
+  heading: This video was a Markdown file.
+  subheading: Every scene, every diagram, every word.
+```
+
+## Made by
+
+FrameForge. Made by Mostly Human Studio, for people who would rather write than edit.
+
+```scene
+template: morph
+props:
+  from: FrameForge
+  to: Mostly Human Studio
+  tagline: Makers of FrameForge
+```

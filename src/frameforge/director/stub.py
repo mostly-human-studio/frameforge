@@ -10,6 +10,7 @@ Given a source Markdown document it produces a real draft:
     ## Section                   → one scene per H2
     Paragraphs                   → narration
     - bullets                    → text-reveal scene
+    ```scene  (YAML)             → any template, exactly: {template: morph, props: {...}}
     ```diagram  (YAML)           → architecture-diagram scene
     ![caption](file.png)         → image scene (file under assets/)
 
@@ -27,7 +28,9 @@ from pydantic import ValidationError
 
 from ..errors import FrameForgeError
 from ..formats import format_validation_error
-from ..models import Brief, DiagramProps, Script, ScriptScene, Storyboard
+from pydantic import TypeAdapter
+
+from ..models import Brief, DiagramProps, Script, ScriptScene, Storyboard, StoryboardScene
 from .base import Draft, DraftRequest
 
 _FRONT = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.S)
@@ -36,6 +39,7 @@ _IMAGE = re.compile(r"^!\[([^\]]*)\]\(([^)\s]+)\)\s*$", re.M)
 _BULLET = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+(.*)$")
 
 MAX_BULLETS = 6
+_SCENE = TypeAdapter(StoryboardScene)
 
 
 class StubDirector:
@@ -144,10 +148,11 @@ def _split_sections(text: str) -> tuple[str, str, list[tuple[str, str]]]:
 
 
 def _narration_and_body(body: str) -> tuple[str, dict]:
-    visual = {"diagram": None, "image": None, "bullets": []}
+    visual = {"scene": None, "diagram": None, "image": None, "bullets": []}
     for m in _FENCE.finditer(body):
-        if (m.group(1) or "").lower() == "diagram" and visual["diagram"] is None:
-            visual["diagram"] = m.group(2)
+        lang = (m.group(1) or "").lower()
+        if lang in ("diagram", "scene") and visual[lang] is None:
+            visual[lang] = m.group(2)
     body = _FENCE.sub("", body)
     if m := _IMAGE.search(body):
         visual["image"] = (m.group(1), m.group(2))
@@ -171,6 +176,20 @@ def _narration_and_body(body: str) -> tuple[str, dict]:
 
 def _visual_scene(sid: str, heading: str, v: dict) -> tuple[dict, str | None]:
     base = {"id": sid, "title": heading}
+    if v["scene"] is not None:
+        try:
+            block = yaml.safe_load(v["scene"]) or {}
+            if not isinstance(block, dict):
+                raise ValueError("a ```scene block must be a YAML mapping with 'template' and 'props'")
+            scene = {**base, **{k: block[k] for k in ("template", "props", "notes") if k in block}}
+            _SCENE.validate_python(scene)
+        except (yaml.YAMLError, ValidationError, ValueError) as exc:
+            detail = "; ".join(format_validation_error(exc)) if isinstance(exc, ValidationError) else str(exc)
+            raise FrameForgeError(
+                f"Scene block under '## {heading}' is invalid: {detail}",
+                hint="Run 'frameforge schema storyboard' for templates and their props.",
+            ) from exc
+        return scene, None
     if v["diagram"] is not None:
         try:
             props = yaml.safe_load(v["diagram"]) or {}

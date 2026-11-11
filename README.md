@@ -66,7 +66,12 @@ change. Narration lives only in the script, so the two files can't disagree.
 
 Templates: `title`, `text-reveal` (≤6 bullets), `architecture-diagram`
 (zones marked `internal` or `external`; edges reveal in order), `image`
-(file in `assets/`).
+(file in `assets/`), `morph` (liquid text morph, e.g. product name into
+studio wordmark, with an optional tagline).
+
+Design profiles can set `background.style: grid-glow`: a static dot grid,
+colour glows and a vignette behind every scene. It's static on purpose, so cuts
+are seamless and scenes stay independently cacheable.
 
 Validation blocks approval for: missing or invalid files, scene ids that don't
 match, diagram references that don't resolve, asset paths outside `assets/`,
@@ -101,6 +106,10 @@ The stub director turns a Markdown document into a draft. See
 - each `## Section` → one scene: paragraphs become narration; then a
   ```` ```diagram ```` YAML block → diagram, an `![caption](assets/x.png)` → image,
   bullets → text reveal, and anything else → title card
+- a ```` ```scene ```` YAML block (`template:` + `props:`) sets any template
+  exactly, e.g. a `morph` outro. `frameforge schema storyboard` lists them all.
+
+`examples/frameforge-promo.md` is FrameForge's own promo video, made with FrameForge.
 
 ## With Claude Code
 

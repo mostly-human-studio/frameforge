@@ -79,6 +79,14 @@ class Motion(_Open):
     element_stagger_frames: int = Field(ge=0, le=60)
 
 
+class BackgroundSpec(_Open):
+    # Static on purpose: identical in every scene, so cuts are seamless and
+    # per-scene caching still works (no global time dependency).
+    style: Literal["plain", "grid-glow"] = "plain"
+    grid_px: int = Field(48, ge=16, le=200)
+    glow: bool = True
+
+
 class DesignSystem(_Open):
     name: str
     version: int | str
@@ -86,6 +94,7 @@ class DesignSystem(_Open):
     typography: Typography
     layout: LayoutSpec
     motion: Motion
+    background: BackgroundSpec = Field(default_factory=BackgroundSpec)
 
 
 # ---------------------------------------------------------------- script
@@ -167,6 +176,17 @@ class ImageProps(_Strict):
     fit: Literal["contain", "cover"] = "contain"
 
 
+class MorphProps(_Strict):
+    """Liquid text morph: `from` melts into `to` (e.g. product → studio wordmark)."""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    from_: str = Field(alias="from", min_length=1, max_length=40)
+    to: str = Field(min_length=1, max_length=40)
+    kicker: str | None = Field(None, max_length=60, description="Small label above, shown before the morph")
+    tagline: str | None = Field(None, max_length=80, description="Line below, revealed after the morph")
+
+
 class _SceneBase(_Strict):
     id: str = Field(pattern=SCENE_ID)
     title: str = ""
@@ -193,12 +213,17 @@ class ImageScene(_SceneBase):
     props: ImageProps
 
 
+class MorphScene(_SceneBase):
+    template: Literal["morph"]
+    props: MorphProps
+
+
 StoryboardScene = Annotated[
-    Union[TitleScene, TextRevealScene, DiagramScene, ImageScene],
+    Union[TitleScene, TextRevealScene, DiagramScene, ImageScene, MorphScene],
     Field(discriminator="template"),
 ]
 
-TEMPLATES = ("title", "text-reveal", "architecture-diagram", "image")
+TEMPLATES = ("title", "text-reveal", "architecture-diagram", "image", "morph")
 
 
 class Storyboard(_Strict):
