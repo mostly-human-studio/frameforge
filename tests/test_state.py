@@ -14,7 +14,7 @@ def test_create_lays_out_project_and_snapshots_profile(workspace):
     for sub in ("assets", "audio", "scenes", "review", "output"):
         assert (d / sub).is_dir()
     assert (d / "design-system.yaml").is_file()
-    assert p.profile.name == "technical-dark" and p.profile.version == 1
+    assert p.profile.name == "technical-dark" and p.profile.version == 2
     assert p.stages["setup"].status is StageStatus.done
     assert set(p.stages) == set(STAGES)
 

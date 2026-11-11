@@ -1,8 +1,10 @@
 import React from 'react';
 import {AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
+import {Background} from './Background';
 import {ensureFonts} from './fonts';
 import {ArchitectureDiagram} from './templates/ArchitectureDiagram';
 import {ImageScene} from './templates/ImageScene';
+import {Morph} from './templates/Morph';
 import {TextReveal} from './templates/TextReveal';
 import {Title} from './templates/Title';
 import type {SceneProps} from './types';
@@ -35,6 +37,9 @@ export const Scene: React.FC<SceneProps> = ({scene, design}) => {
     case 'image':
       body = <ImageScene {...scene.props} design={design} />;
       break;
+    case 'morph':
+      body = <Morph {...scene.props} design={design} />;
+      break;
     default: {
       const t: never = scene;
       throw new Error(`Unknown template: ${JSON.stringify(t)}`);
@@ -43,6 +48,7 @@ export const Scene: React.FC<SceneProps> = ({scene, design}) => {
 
   return (
     <AbsoluteFill style={{backgroundColor: design.palette.background}}>
+      <Background design={design} />
       <AbsoluteFill style={{opacity}}>{body}</AbsoluteFill>
     </AbsoluteFill>
   );
